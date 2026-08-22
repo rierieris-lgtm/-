@@ -295,14 +295,14 @@ const CATS = [
 
 const ITEMS = [
   // 道路
-  {id:"roadStraight",cat:"road",label:"車道（まっすぐ）",icon:"🛣️",shape:"flat",top:"#5b6169"},
-  {id:"roadCurve",cat:"road",label:"車道（カーブ）",icon:"↩️",shape:"flat",top:"#5b6169"},
-  {id:"sidewalk",cat:"road",label:"歩道",icon:"🚶",shape:"flat",top:"#cfc9bd"},
-  {id:"crosswalk",cat:"road",label:"横断歩道",icon:"🦓",shape:"flatStripe",top:"#5b6169"},
+  {id:"roadStraight",cat:"road",label:"車道（まっすぐ）",icon:"🛣️",shape:"flat",top:"#5b6169",worldIcon:false},
+  {id:"roadCurve",cat:"road",label:"車道（カーブ）",icon:"↩️",shape:"flat",top:"#5b6169",worldIcon:false},
+  {id:"sidewalk",cat:"road",label:"歩道",icon:"🚶",shape:"flatConcrete",top:"#63635f",worldIcon:false},
+  {id:"crosswalk",cat:"road",label:"横断歩道",icon:"🦓",shape:"flatStripe",top:"#5b6169",worldIcon:false},
   {id:"trafficLight",cat:"road",label:"信号",icon:"🚦",shape:"thin",top:"#3d3d3d",h:60},
   {id:"guardrail",cat:"road",label:"ガードレール",icon:"🚧",shape:"thin",top:"#cfcfcf",h:20},
-  {id:"parking",cat:"road",label:"駐車場",icon:"🅿️",shape:"flatLetter",top:"#7d828a"},
-  {id:"bridge",cat:"road",label:"橋",icon:"🌉",shape:"flat",top:"#a9a094"},
+  {id:"parking",cat:"road",label:"駐車場",icon:"🅿️",shape:"flatLetter",top:"#7d828a",worldIcon:false},
+  {id:"bridge",cat:"road",label:"橋",icon:"🌉",shape:"flat",top:"#a9a094",worldIcon:false},
 
   // 建物
   {id:"house",cat:"building",label:"一軒家",icon:"🏠",shape:"block",top:"#c96b4a",left:"#f0c9a5",right:"#dbb187",h:46},
@@ -310,7 +310,7 @@ const ITEMS = [
   {id:"conveni",cat:"building",label:"コンビニ",icon:"🏪",shape:"block",top:"#2f7fd1",left:"#eaf3fb",right:"#cfe3f5",h:40},
   {id:"supermarket",cat:"building",label:"スーパー",icon:"🛒",shape:"block",top:"#2f9d55",left:"#f1d98d",right:"#dcc47b",h:44},
   {id:"restaurant",cat:"building",label:"レストラン",icon:"🍽️",shape:"block",top:"#b3432f",left:"#f4ded0",right:"#e0c3b2",h:42},
-  {id:"school",cat:"building",label:"学校",icon:"🏫",shape:"block",top:"#3b6fae",left:"#e7edf5",right:"#cfd9e8",h:58},
+  {id:"school",cat:"building",label:"学校",icon:"🏫",shape:"block",top:"#3b6fae",left:"#e7edf5",right:"#cfd9e8",h:78,scale:1.15},
   {id:"hospital",cat:"building",label:"病院",icon:"🏥",shape:"block",top:"#d1493f",left:"#ffffff",right:"#e6e6e6",h:62},
   {id:"temple",cat:"building",label:"お寺",icon:"⛩️",shape:"block",top:"#3d3229",left:"#d3b68c",right:"#bfa27a",h:50},
   {id:"shrine",cat:"building",label:"神社",icon:"🎌",shape:"block",top:"#b23b2e",left:"#e7c7ab",right:"#d1b096",h:40},
@@ -318,7 +318,7 @@ const ITEMS = [
 
   // 街のもの
   {id:"pole",cat:"city",label:"電柱",icon:"⚡",shape:"thin",top:"#6b6b6b",h:100},
-  {id:"wire",cat:"city",label:"電線",icon:"🔌",shape:"flat",top:"#c9c4b8"},
+  {id:"wire",cat:"city",label:"電線",icon:"🔌",shape:"flat",top:"#c9c4b8",worldIcon:false},
   {id:"streetlight",cat:"city",label:"街灯",icon:"💡",shape:"thin",top:"#555",h:82},
   {id:"vending",cat:"city",label:"自動販売機",icon:"🥤",shape:"block",top:"#dce3e7",left:"#7eb5d1",right:"#5f97b3",h:34},
   {id:"trash",cat:"city",label:"ゴミ箱",icon:"🗑️",shape:"thin",top:"#6a8f6a",h:20},
@@ -328,10 +328,10 @@ const ITEMS = [
   // 自然
   {id:"treeLarge",cat:"nature",label:"木（大）",icon:"🌳",shape:"tree",top:"#4c8f45",h:64},
   {id:"treeMed",cat:"nature",label:"木（中）",icon:"🌲",shape:"tree",top:"#5c9d52",h:44},
-  {id:"lawn",cat:"nature",label:"芝生",icon:"🌱",shape:"flat",top:"#9dcc82"},
-  {id:"park",cat:"nature",label:"公園",icon:"🏞️",shape:"flat",top:"#8fc477"},
-  {id:"flowerbed",cat:"nature",label:"花だん",icon:"🌷",shape:"flatFlower",top:"#7fb768"},
-  {id:"pond",cat:"nature",label:"池",icon:"💧",shape:"flat",top:"#6fb6d9"},
+  {id:"lawn",cat:"nature",label:"芝生",icon:"🌱",shape:"flat",top:"#9dcc82",worldIcon:false},
+  {id:"park",cat:"nature",label:"公園",icon:"🏞️",shape:"flat",top:"#8fc477",worldIcon:false},
+  {id:"flowerbed",cat:"nature",label:"花だん",icon:"🌷",shape:"flatFlower",top:"#7fb768",worldIcon:false},
+  {id:"pond",cat:"nature",label:"池",icon:"💧",shape:"flat",top:"#6fb6d9",worldIcon:false},
 
   // 乗り物
   {id:"carRed",cat:"vehicle",label:"車（赤）",icon:"🚗",shape:"vehicle",top:"#d9574d",h:20},
@@ -475,12 +475,25 @@ function drawItem(def,gx,gy,selected){
   const h = (def.h||0)*z;
   const night = isNight;
 
-  if(def.shape==="flat" || def.shape==="flatStripe" || def.shape==="flatLetter" || def.shape==="flatFlower"){
+  if(def.shape==="flat" || def.shape==="flatStripe" || def.shape==="flatLetter" || def.shape==="flatFlower" || def.shape==="flatConcrete"){
     diamond(sx,sy,hw,hh);
     ctx.fillStyle = night ? shade(def.top,-40) : def.top;
     ctx.fill();
     ctx.strokeStyle="#00000020"; ctx.lineWidth=1; ctx.stroke();
 
+    if(def.shape==="flatConcrete"){
+      ctx.save();
+      ctx.beginPath(); diamond(sx,sy,hw,hh); ctx.clip();
+      ctx.strokeStyle = night ? "#ffffff20" : "#ffffff45";
+      ctx.lineWidth = Math.max(1,1.4*z);
+      for(let i=-1;i<=1;i++){
+        ctx.beginPath();
+        ctx.moveTo(sx-hw+ (i+2)*hw/2, sy-hh*1.2);
+        ctx.lineTo(sx-hw+ (i+2)*hw/2 - hw*0.3, sy+hh*1.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     if(def.shape==="flatStripe"){
       ctx.save();
       ctx.beginPath(); diamond(sx,sy,hw,hh); ctx.clip();
@@ -505,7 +518,9 @@ function drawItem(def,gx,gy,selected){
       }
     }
   } else if(def.shape==="block"){
-    const N=[sx, sy-h-hh], E=[sx+hw, sy-h], S=[sx, sy-h+hh], W=[sx-hw, sy-h];
+    const scl = def.scale||1;
+    const bw = hw*scl, bh = hh*scl;
+    const N=[sx, sy-h-bh], E=[sx+bw, sy-h], S=[sx, sy-h+bh], W=[sx-bw, sy-h];
     // left face
     ctx.beginPath();
     ctx.moveTo(W[0],W[1]); ctx.lineTo(S[0],S[1]); ctx.lineTo(S[0],S[1]+h); ctx.lineTo(W[0],W[1]+h);
@@ -532,8 +547,8 @@ function drawItem(def,gx,gy,selected){
       const rows = Math.max(1,Math.floor(h/(14*z)));
       for(let r=1;r<rows;r++){
         const wy = S[1]+ h - r*(h/rows);
-        ctx.fillRect(S[0]-hw*0.55, wy-3*z, 5*z,5*z);
-        ctx.fillRect(S[0]+hw*0.2, wy-3*z, 5*z,5*z);
+        ctx.fillRect(S[0]-bw*0.55, wy-3*z, 5*z,5*z);
+        ctx.fillRect(S[0]+bw*0.2, wy-3*z, 5*z,5*z);
       }
     }
   } else if(def.shape==="thin"){
@@ -585,7 +600,7 @@ function drawItem(def,gx,gy,selected){
   }
 
   // icon
-  if(def.icon){
+  if(def.icon && def.worldIcon !== false){
     const fontSize = Math.max(9, (def.shape==="flat"||def.shape==="flatStripe"||def.shape==="flatLetter"||def.shape==="flatFlower" ? 14 : 12)*z);
     ctx.font = fontSize+"px sans-serif";
     ctx.textAlign="center";
