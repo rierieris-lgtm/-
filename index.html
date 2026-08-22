@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>さきの街づくり</title>
+<style>
+:root{
+  --cream:#faf6ec;
+  --panel:#ffffffee;
+  --ink:#3b332a;
+  --sub:#8a8074;
+  --line:#e7e0d2;
+  --accent:#4a90d9;
+  --road:#5b7fa6;
+  --building:#d98a4f;
+  --city:#4fa9a1;
+  --nature:#5fa84c;
+  --vehicle:#d9574d;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;background:var(--cream);color:var(--ink);}
+button{font-family:inherit;}
+
+/* ---------- header ---------- */
+header{
+  height:58px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 12px;
+  border-bottom:1px solid var(--line);
+  position:relative;
+  z-index:20;
+}
+.brand{display:flex;align-items:center;gap:8px;margin-right:8px;}
+.brand .logo{font-size:26px;}
+.brand h1{font-size:16px;margin:0;line-height:1.1;}
+.brand span{font-size:10px;color:var(--sub);display:block;}
+.toolbtn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  border:1px solid var(--line);background:#fff;border-radius:10px;
+  padding:6px 10px;cursor:pointer;font-size:10px;color:var(--ink);
+  transition:background .15s;
+}
+.toolbtn:hover{background:#f4efe4;}
+.toolbtn .ic{font-size:16px;}
+.toolbtn.danger:hover{background:#fdecea;}
+.spacer{flex:1;}
+.daynight{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+.daynight button{border:none;background:#fff;padding:8px 12px;font-size:11px;cursor:pointer;color:var(--sub);}
+.daynight button.active{background:#3a3550;color:#fff;}
+.daynight button:first-child.active{background:#ffb703;color:#3b332a;}
+
+/* ---------- game area ---------- */
+#game{position:relative;width:100vw;height:calc(100vh - 58px);overflow:hidden;background:#cfe3f0;}
+#world{position:absolute;inset:0;display:block;touch-action:none;cursor:grab;}
+#world.dragging{cursor:grabbing;}
+#world.placing{cursor:cell;}
+
+/* ---------- left menu ---------- */
+#menu{
+  position:absolute;left:12px;top:12px;bottom:12px;width:210px;
+  background:var(--panel);border-radius:16px;box-shadow:0 8px 24px #0002;
+  display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(3px);
+  z-index:10;
+}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;padding:10px 10px 6px;border-bottom:1px solid var(--line);}
+.tab{
+  border:1px solid var(--line);background:#fff;border-radius:8px;
+  padding:5px 8px;font-size:11px;cursor:pointer;color:var(--sub);
+}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.itemgrid{
+  flex:1;overflow-y:auto;padding:10px;
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;
+}
+.itemcard{
+  border:1px solid var(--line);background:#fff;border-radius:10px;
+  padding:8px 4px 6px;text-align:center;cursor:pointer;font-size:10.5px;
+  line-height:1.3;display:flex;flex-direction:column;align-items:center;gap:4px;
+  transition:transform .1s,box-shadow .1s;
+}
+.itemcard:hover{transform:translateY(-1px);box-shadow:0 3px 8px #0002;}
+.itemcard.selected{outline:2px solid var(--ink);background:#fff7e6;}
+.itemcard .ic{font-size:22px;}
+.itemcard .catdot{width:6px;height:6px;border-radius:50%;margin-top:2px;}
+.eraser-card{border-color:#e9b3ae;background:#fff5f4;}
+.eraser-card.selected{outline-color:#c0392b;}
+
+/* ---------- hint banner ---------- */
+#hint{
+  position:absolute;left:236px;top:14px;background:#fff;
+  border-radius:12px;padding:9px 14px;font-size:12px;box-shadow:0 6px 16px #0002;
+  display:flex;align-items:center;gap:8px;z-index:9;max-width:320px;
+}
+
+/* ---------- right camera controls ---------- */
+#camctrl{
+  position:absolute;right:14px;top:14px;display:flex;flex-direction:column;
+  align-items:center;gap:10px;z-index:10;
+}
+.dpad{
+  width:96px;height:96px;position:relative;background:#fff;border-radius:50%;
+  box-shadow:0 6px 16px #0003;
+}
+.dpad button{
+  position:absolute;width:30px;height:30px;border-radius:50%;border:none;
+  background:#fff;font-size:13px;cursor:pointer;color:var(--ink);
+}
+.dpad button:hover{background:#f0ece0;}
+.dpad .up{top:2px;left:33px;}
+.dpad .down{bottom:2px;left:33px;}
+.dpad .left{left:2px;top:33px;}
+.dpad .right{right:2px;top:33px;}
+.dpad .center{left:33px;top:33px;width:30px;height:30px;background:#eee;cursor:default;}
+.roundbtn{
+  width:52px;height:52px;border-radius:50%;background:#fff;border:none;
+  box-shadow:0 6px 16px #0003;cursor:pointer;font-size:16px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--ink);
+}
+.roundbtn span{font-size:9px;}
+.roundbtn:hover{background:#f0ece0;}
+
+/* ---------- bottom bar ---------- */
+#bottombar{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--panel);border-top:1px solid var(--line);
+  display:flex;gap:18px;padding:10px 16px;font-size:11px;z-index:10;
+  align-items:flex-start;flex-wrap:wrap;
+}
+.bb-col h3{margin:0 0 6px;font-size:11px;color:var(--sub);font-weight:600;}
+.cammode{display:flex;gap:6px;}
+.cammode button{
+  border:2px solid var(--line);background:#fff;border-radius:10px;padding:4px;
+  cursor:pointer;font-size:10px;width:74px;
+}
+.cammode button.active{border-color:var(--accent);background:#eaf3fc;}
+.cammode .thumb{width:100%;height:34px;border-radius:6px;margin-bottom:3px;}
+.thumb.top{background:linear-gradient(135deg,#bfe3a0,#8fc477);}
+.thumb.walk{background:linear-gradient(135deg,#f0c9a5,#a94c3d);}
+.controls-list{list-style:none;margin:0;padding:0;color:var(--sub);}
+.controls-list li{margin-bottom:2px;}
+#shotbtn{
+  border:1px solid var(--line);background:#fff;border-radius:10px;
+  padding:16px 14px;cursor:pointer;font-size:11px;display:flex;
+  flex-direction:column;align-items:center;gap:4px;
+}
+#shotbtn:hover{background:#f4efe4;}
+#minimapwrap{position:relative;}
+#minimap{border:1px solid var(--line);border-radius:8px;background:#8fc477;cursor:pointer;}
+.mmzoom{position:absolute;right:2px;bottom:2px;display:flex;flex-direction:column;gap:2px;}
+.mmzoom button{width:16px;height:16px;font-size:9px;border:1px solid var(--line);background:#fff;border-radius:4px;cursor:pointer;padding:0;line-height:1;}
+
+/* ---------- modal ---------- */
+#modalbg{position:absolute;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:50;}
+#modalbg.show{display:flex;}
+#helpcard{background:#fff;border-radius:16px;padding:22px 26px;max-width:380px;font-size:13px;line-height:1.8;box-shadow:0 10px 30px #0004;}
+#helpcard h2{margin-top:0;font-size:16px;}
+#helpcard button{margin-top:14px;border:none;background:var(--accent);color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;}
+
+/* ---------- selection toast ---------- */
+#selbar{
+  position:absolute;left:50%;bottom:150px;transform:translateX(-50%);
+  background:#3b332aee;color:#fff;padding:8px 14px;border-radius:20px;
+  font-size:12px;display:none;align-items:center;gap:10px;z-index:15;
+}
+#selbar.show{display:flex;}
+#selbar button{border:none;background:#c0392b;color:#fff;border-radius:14px;padding:5px 12px;cursor:pointer;font-size:11px;}
+
+@media (max-width:820px){
+  #menu{width:150px;}
+  #hint{display:none;}
+  #bottombar{overflow-x:auto;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🏙️</div>
+    <div><h1>さきの街づくり</h1><span>〜 自分だけのまちをつくろう！ 〜</span></div>
+  </div>
+
+  <button class="toolbtn" id="btnNew"><span class="ic">➕</span>あたらしい街</button>
+  <button class="toolbtn" id="btnOpen"><span class="ic">📂</span>開く</button>
+  <button class="toolbtn" id="btnSave"><span class="ic">💾</span>保存</button>
+  <button class="toolbtn" id="btnRedo"><span class="ic">🔁</span>やり直す</button>
+  <button class="toolbtn" id="btnUndo"><span class="ic">↩️</span>取り消す</button>
+  <button class="toolbtn danger" id="btnClear"><span class="ic">🗑️</span>すべて消す</button>
+  <input type="file" id="fileInput" accept="application/json" style="display:none;">
+
+  <div class="spacer"></div>
+
+  <div class="daynight">
+    <button id="btnDay" class="active">☀️ 昼</button>
+    <button id="btnNight">🌙 夜</button>
+  </div>
+  <button class="toolbtn" id="btnHelp"><span class="ic">❓</span>使い方</button>
+</header>
+
+<div id="game">
+  <canvas id="world"></canvas>
+
+  <div id="hint">
+    <span>👆</span>
+    <span id="hintText">アイテムを選んで、好きな場所に置いてみよう！</span>
+  </div>
+
+  <div id="menu">
+    <div class="tabs" id="tabs"></div>
+    <div class="itemgrid" id="itemgrid"></div>
+  </div>
+
+  <div id="camctrl">
+    <div class="dpad">
+      <button class="up" id="panUp">▲</button>
+      <button class="left" id="panLeft">◀</button>
+      <div class="center"></div>
+      <button class="right" id="panRight">▶</button>
+      <button class="down" id="panDown">▼</button>
+    </div>
+    <button class="roundbtn" id="btnRotate">🔄<span>回転</span></button>
+    <button class="roundbtn" id="btnZoomIn">➕<span>ズーム+</span></button>
+    <button class="roundbtn" id="btnZoomOut">➖<span>ズーム-</span></button>
+  </div>
+
+  <div id="selbar">
+    <span id="selLabel"></span>
+    <button id="selDelete">🗑️ 消す</button>
+  </div>
+
+  <div id="bottombar">
+    <div class="bb-col">
+      <h3>カメラモード</h3>
+      <div class="cammode">
+        <button id="camTop" class="active"><div class="thumb top"></div>上から見る</button>
+        <button id="camWalk"><div class="thumb walk"></div>歩いて見る</button>
+      </div>
+    </div>
+    <div class="bb-col">
+      <h3>操作方法</h3>
+      <ul class="controls-list">
+        <li>👆 ドラッグ：カメラを動かす</li>
+        <li>🖐 ホイール / ピンチ：ズーム</li>
+        <li>🔄 アイテムを選んで置く</li>
+        <li>🗑️ アイテムを選んで削除</li>
+      </ul>
+    </div>
+    <div class="bb-col">
+      <h3>スクリーンショット</h3>
+      <button id="shotbtn">📷 画像を保存</button>
+    </div>
+    <div class="bb-col">
+      <h3>ミニマップ</h3>
+      <div id="minimapwrap">
+        <canvas id="minimap" width="150" height="110"></canvas>
+        <div class="mmzoom">
+          <button id="mmZoomIn">+</button>
+          <button id="mmZoomOut">−</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modalbg">
+  <div id="helpcard">
+    <h2>🏙️ 使い方</h2>
+    <p>① 左のメニューから置きたいアイテムを選ぶよ。</p>
+    <p>② 地面をクリックすると、そこにアイテムが置かれるよ。</p>
+    <p>③ すでに置いてあるアイテムをクリックすると、消すことができるよ。</p>
+    <p>④ 何もないところをドラッグするとカメラが動くよ。ホイールでズームできるよ。</p>
+    <p>⑤ 「保存」で街のデータをファイルに保存、「開く」で読み込めるよ。自動的にブラウザにも保存されるよ。</p>
+    <button onclick="closeHelp()">わかった！</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   アイテム定義
+===================================================================== */
+const CATS = [
+  {id:"all",label:"すべて"},
+  {id:"road",label:"道路",color:"var(--road)"},
+  {id:"building",label:"建物",color:"var(--building)"},
+  {id:"city",label:"街のもの",color:"var(--city)"},
+  {id:"nature",label:"自然",color:"var(--nature)"},
+  {id:"vehicle",label:"乗り物",color:"var(--vehicle)"}
+];
+
+const ITEMS = [
+  // 道路
+  {id:"roadStraight",cat:"road",label:"車道（まっすぐ）",icon:"🛣️",shape:"flat",top:"#5b6169",worldIcon:false},
+  {id:"roadCurve",cat:"road",label:"車道（カーブ）",icon:"↩️",shape:"flat",top:"#5b6169",worldIcon:false},
+  {id:"sidewalk",cat:"road",label:"歩道",icon:"🚶",shape:"flatConcrete",top:"#63635f",worldIcon:false},
+  {id:"crosswalk",cat:"road",label:"横断歩道",icon:"🦓",shape:"flatStripe",top:"#5b6169",worldIcon:false},
+  {id:"trafficLight",cat:"road",label:"信号",icon:"🚦",shape:"thin",top:"#3d3d3d",h:60},
+  {id:"guardrail",cat:"road",label:"ガードレール",icon:"🚧",shape:"thin",top:"#cfcfcf",h:20},
+  {id:"parking",cat:"road",label:"駐車場",icon:"P",shape:"flatLetter",top:"#7d828a",worldIcon:false},
+  {id:"bridge",cat:"road",label:"橋",icon:"🌉",shape:"flat",top:"#a9a094",worldIcon:false},
+
+  // 建物
+  {id:"house",cat:"building",label:"一軒家",icon:"🏠",shape:"block",top:"#c96b4a",left:"#f0c9a5",right:"#dbb187",h:46},
+  {id:"apartment",cat:"building",label:"マンション",icon:"🏢",shape:"block",top:"#8b93a3",left:"#d7d8dc",right:"#c1c3ca",h:96},
+  {id:"conveni",cat:"building",label:"コンビニ",icon:"🏪",shape:"block",top:"#2f7fd1",left:"#eaf3fb",right:"#cfe3f5",h:40},
+  {id:"supermarket",cat:"building",label:"スーパー",icon:"🛒",shape:"block",top:"#2f9d55",left:"#f1d98d",right:"#dcc47b",h:44},
+  {id:"restaurant",cat:"building",label:"レストラン",icon:"🍽️",shape:"block",top:"#b3432f",left:"#f4ded0",right:"#e0c3b2",h:42},
+  {id:"school",cat:"building",label:"学校",icon:"🏫",shape:"block",top:"#3b6fae",left:"#e7edf5",right:"#cfd9e8",h:78,scale:1.15},
+  {id:"hospital",cat:"building",label:"病院",icon:"🏥",shape:"block",top:"#d1493f",left:"#ffffff",right:"#e6e6e6",h:62},
+  {id:"temple",cat:"building",label:"お寺",icon:"⛩️",shape:"block",top:"#3d3229",left:"#d3b68c",right:"#bfa27a",h:50},
+  {id:"shrine",cat:"building",label:"神社",icon:"🎌",shape:"block",top:"#b23b2e",left:"#e7c7ab",right:"#d1b096",h:40},
+  {id:"station",cat:"building",label:"駅",icon:"🚉",shape:"block",top:"#555b63",left:"#e3e1da",right:"#cfcdc6",h:54},
+
+  // 街のもの
+  {id:"pole",cat:"city",label:"電柱",icon:"⚡",shape:"thin",top:"#6b6b6b",h:100},
+  {id:"wire",cat:"city",label:"電線",icon:"🔌",shape:"flat",top:"#c9c4b8",worldIcon:false},
+  {id:"streetlight",cat:"city",label:"街灯",icon:"💡",shape:"thin",top:"#555",h:82},
+  {id:"vending",cat:"city",label:"自動販売機",icon:"🥤",shape:"block",top:"#dce3e7",left:"#7eb5d1",right:"#5f97b3",h:34},
+  {id:"trash",cat:"city",label:"ゴミ箱",icon:"🗑️",shape:"thin",top:"#6a8f6a",h:20},
+  {id:"mailbox",cat:"city",label:"郵便ポスト",icon:"📮",shape:"thin",top:"#c0392b",h:24},
+  {id:"bench",cat:"city",label:"ベンチ",icon:"🪑",shape:"thin",top:"#8c5a3c",h:14},
+
+  // 自然
+  {id:"treeLarge",cat:"nature",label:"木（大）",icon:"🌳",shape:"tree",top:"#4c8f45",h:64},
+  {id:"treeMed",cat:"nature",label:"木（中）",icon:"🌲",shape:"tree",top:"#5c9d52",h:44},
+  {id:"lawn",cat:"nature",label:"芝生",icon:"🌱",shape:"flat",top:"#9dcc82",worldIcon:false},
+  {id:"park",cat:"nature",label:"公園",icon:"🏞️",shape:"flat",top:"#8fc477",worldIcon:false},
+  {id:"flowerbed",cat:"nature",label:"花だん",icon:"🌷",shape:"flatFlower",top:"#7fb768",worldIcon:false},
+  {id:"pond",cat:"nature",label:"池",icon:"💧",shape:"flat",top:"#6fb6d9",worldIcon:false},
+
+  // 乗り物
+  {id:"carRed",cat:"vehicle",label:"車（赤）",icon:"🚗",shape:"vehicle",top:"#d9574d",h:20},
+  {id:"carWhite",cat:"vehicle",label:"車（白）",icon:"🚙",shape:"vehicle",top:"#ececec",h:20},
+  {id:"bus",cat:"vehicle",label:"バス",icon:"🚌",shape:"vehicle",top:"#e0b23d",h:26},
+  {id:"truck",cat:"vehicle",label:"トラック",icon:"🚚",shape:"vehicle",top:"#5b7fa6",h:26},
+  {id:"bike",cat:"vehicle",label:"自転車",icon:"🚲",shape:"thin",top:"#333",h:18},
+];
+const ITEM_BY_ID = Object.fromEntries(ITEMS.map(it=>[it.id,it]));
+const CAT_COLOR = {road:"#5b7fa6",building:"#d98a4f",city:"#4fa9a1",nature:"#5fa84c",vehicle:"#d9574d"};
+
+/* =====================================================================
+   状態
+===================================================================== */
+const TILE_W = 64, TILE_H = 32;
+const GRID_RANGE = 22; // -22..22
+
+let world = new Map();      // key "gx,gy" -> {id,type,gx,gy}
+let nextId = 1;
+let rotation = 0;           // 0-3 (90度きざみ)
+let isNight = false;
+let cameraMode = "top";     // top | walk
+let camera = {x:0,y:0,zoom:1};
+
+let history = [];
+let future = [];
+
+let selectedTool = null;
+let selectedObjId = null;
+let hoverTile = null;
+
+let stars = [];
+for(let i=0;i<80;i++){
+  stars.push({x:Math.random(),y:Math.random()*0.6,r:Math.random()*1.6+0.4});
+}
+
+/* =====================================================================
+   canvas 準備
+===================================================================== */
+const canvas = document.getElementById("world");
+const ctx = canvas.getContext("2d");
+const gameEl = document.getElementById("game");
+let dpr = Math.max(1, window.devicePixelRatio || 1);
+
+function resizeCanvas(){
+  const w = gameEl.clientWidth, h = gameEl.clientHeight;
+  canvas.width = w*dpr;
+  canvas.height = h*dpr;
+  canvas.style.width = w+"px";
+  canvas.style.height = h+"px";
+  needsRender = true;
+}
+window.addEventListener("resize", resizeCanvas);
+
+/* =====================================================================
+   座標変換（回転つきアイソメ図法）
+===================================================================== */
+function rotateGrid(gx,gy,r){
+  switch(((r%4)+4)%4){
+    case 0: return [gx,gy];
+    case 1: return [-gy,gx];
+    case 2: return [-gx,-gy];
+    case 3: return [gy,-gx];
+  }
+}
+
+function gridToScreen(gx,gy){
+  const [rx,ry] = rotateGrid(gx,gy,rotation);
+  const cx = canvas.width/(2*dpr) + camera.x;
+  const cy = canvas.height/(2*dpr) + camera.y;
+  const hw = (TILE_W/2)*camera.zoom;
+  const hh = (TILE_H/2)*camera.zoom;
+  return [cx + (rx-ry)*hw, cy + (rx+ry)*hh];
+}
+
+function screenToGrid(sx,sy){
+  const cx = canvas.width/(2*dpr) + camera.x;
+  const cy = canvas.height/(2*dpr) + camera.y;
+  const hw = (TILE_W/2)*camera.zoom;
+  const hh = (TILE_H/2)*camera.zoom;
+  const ux = (sx-cx)/hw;
+  const uy = (sy-cy)/hh;
+  const rx = (ux+uy)/2;
+  const ry = (uy-ux)/2;
+  const [gx,gy] = rotateGrid(Math.round(rx),Math.round(ry), -rotation);
+  return [gx,gy];
+}
+
+/* =====================================================================
+   描画
+===================================================================== */
+function shade(hex,amt){
+  const n = parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&0xff)+amt, b=(n&0xff)+amt;
+  r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
+  return "rgb("+r+","+g+","+b+")";
+}
+
+function diamond(cx,cy,hw,hh){
+  ctx.beginPath();
+  ctx.moveTo(cx, cy-hh);
+  ctx.lineTo(cx+hw, cy);
+  ctx.lineTo(cx, cy+hh);
+  ctx.lineTo(cx-hw, cy);
+  ctx.closePath();
+}
+
+function drawGround(gx,gy){
+  const [sx,sy] = gridToScreen(gx,gy);
+  const hw=(TILE_W/2)*camera.zoom, hh=(TILE_H/2)*camera.zoom;
+  const checker = (gx+gy)%2===0;
+  let base = isNight ? (checker?"#3c4a3a":"#37473a") : (checker?"#dfe8d7":"#d3ddc9");
+  diamond(sx,sy,hw,hh);
+  ctx.fillStyle = base;
+  ctx.fill();
+  ctx.strokeStyle = isNight ? "#00000030" : "#00000010";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function drawHover(gx,gy,occupied){
+  const [sx,sy] = gridToScreen(gx,gy);
+  const hw=(TILE_W/2)*camera.zoom, hh=(TILE_H/2)*camera.zoom;
+  let fill,stroke;
+  if(selectedTool==="__eraser__"){ fill="#c0392b33"; stroke="#c0392b"; }
+  else if(selectedTool){ fill="#4a90d955"; stroke="#4a90d9"; }
+  else if(occupied){ fill="#c0392b33"; stroke="#c0392b"; }
+  else { fill="#00000014"; stroke="#00000030"; }
+  diamond(sx,sy,hw,hh);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawItem(def,gx,gy,selected){
+  const [sx,sy] = gridToScreen(gx,gy);
+  const hw=(TILE_W/2)*camera.zoom, hh=(TILE_H/2)*camera.zoom;
+  const z = camera.zoom;
+  const h = (def.h||0)*z;
+  const night = isNight;
+
+  if(def.shape==="flat" || def.shape==="flatStripe" || def.shape==="flatLetter" || def.shape==="flatFlower" || def.shape==="flatConcrete"){
+    diamond(sx,sy,hw,hh);
+    ctx.fillStyle = night ? shade(def.top,-40) : def.top;
+    ctx.fill();
+    ctx.strokeStyle="#00000020"; ctx.lineWidth=1; ctx.stroke();
+
+    if(def.shape==="flatConcrete"){
+      ctx.save();
+      ctx.beginPath(); diamond(sx,sy,hw,hh); ctx.clip();
+      ctx.strokeStyle = night ? "#ffffff20" : "#ffffff45";
+      ctx.lineWidth = Math.max(1,1.4*z);
+      for(let i=-1;i<=1;i++){
+        ctx.beginPath();
+        ctx.moveTo(sx-hw+ (i+2)*hw/2, sy-hh*1.2);
+        ctx.lineTo(sx-hw+ (i+2)*hw/2 - hw*0.3, sy+hh*1.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if(def.shape==="flatStripe"){
+      ctx.save();
+      ctx.beginPath(); diamond(sx,sy,hw,hh); ctx.clip();
+      ctx.strokeStyle="#fff"; ctx.lineWidth=Math.max(1,3*z);
+      for(let i=-3;i<=3;i++){
+        ctx.beginPath();
+        ctx.moveTo(sx-hw+ (i+3)*hw/3.2, sy-hh*1.2);
+        ctx.lineTo(sx-hw+ (i+3)*hw/3.2 - hw*0.3, sy+hh*1.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if(def.shape==="flatLetter"){
+      const inW=hw*0.62, inH=hh*0.62;
+      const iN=[sx, sy-inH], iE=[sx+inW, sy], iS=[sx, sy+inH], iW=[sx-inW, sy];
+      ctx.strokeStyle="#ffffffcc"; ctx.lineWidth=Math.max(1,2*z);
+      ctx.lineCap="round";
+      // two straight parallel parking-space lines (car pulls in straight between them)
+      ctx.beginPath();
+      ctx.moveTo(iW[0],iW[1]); ctx.lineTo(iN[0],iN[1]);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(iE[0],iE[1]); ctx.lineTo(iS[0],iS[1]);
+      ctx.stroke();
+      if(def.icon){
+        const fs = Math.max(9,12*z);
+        ctx.font = "bold "+fs+"px sans-serif";
+        ctx.fillStyle="#ffffffdd";
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText(def.icon, sx, sy);
+      }
+    }
+    if(def.shape==="flatFlower"){
+      const dots=["#e79fc4","#f4d35e","#eee","#e79fc4"];
+      for(let i=0;i<4;i++){
+        const ang = i*Math.PI/2 + 0.5;
+        const dx = Math.cos(ang)*hw*0.35, dy=Math.sin(ang)*hh*0.35;
+        ctx.beginPath();
+        ctx.arc(sx+dx, sy+dy, Math.max(1.5,2.4*z), 0, 7);
+        ctx.fillStyle = dots[i];
+        ctx.fill();
+      }
+    }
+  } else if(def.shape==="block"){
+    const scl = def.scale||1;
+    const bw = hw*scl, bh = hh*scl;
+    const N=[sx, sy-h-bh], E=[sx+bw, sy-h], S=[sx, sy-h+bh], W=[sx-bw, sy-h];
+    // left face
+    ctx.beginPath();
+    ctx.moveTo(W[0],W[1]); ctx.lineTo(S[0],S[1]); ctx.lineTo(S[0],S[1]+h); ctx.lineTo(W[0],W[1]+h);
+    ctx.closePath();
+    ctx.fillStyle = night ? shade(def.left,-70) : def.left;
+    ctx.fill();
+    // right face
+    ctx.beginPath();
+    ctx.moveTo(S[0],S[1]); ctx.lineTo(E[0],E[1]); ctx.lineTo(E[0],E[1]+h); ctx.lineTo(S[0],S[1]+h);
+    ctx.closePath();
+    ctx.fillStyle = night ? shade(def.right,-90) : def.right;
+    ctx.fill();
+    // top
+    ctx.beginPath();
+    ctx.moveTo(N[0],N[1]); ctx.lineTo(E[0],E[1]); ctx.lineTo(S[0],S[1]); ctx.lineTo(W[0],W[1]);
+    ctx.closePath();
+    ctx.fillStyle = night ? shade(def.top,-40) : def.top;
+    ctx.fill();
+    ctx.strokeStyle="#00000025"; ctx.lineWidth=1; ctx.stroke();
+
+    // night windows
+    if(night){
+      ctx.fillStyle="#ffe38a";
+      const rows = Math.max(1,Math.floor(h/(14*z)));
+      for(let r=1;r<rows;r++){
+        const wy = S[1]+ h - r*(h/rows);
+        ctx.fillRect(S[0]-bw*0.55, wy-3*z, 5*z,5*z);
+        ctx.fillRect(S[0]+bw*0.2, wy-3*z, 5*z,5*z);
+      }
+    }
+  } else if(def.shape==="thin"){
+    const baseY = sy;
+    ctx.strokeStyle = night ? shade(def.top,-40) : def.top;
+    ctx.lineWidth = Math.max(2, 3*z);
+    ctx.beginPath();
+    ctx.moveTo(sx, baseY);
+    ctx.lineTo(sx, baseY-h);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(sx, baseY-h, Math.max(3,6*z), Math.max(2,3.5*z), 0,0,7);
+    ctx.fillStyle = night && def.id!=="pole" && def.id!=="streetlight" ? shade(def.top,-30) : def.top;
+    ctx.fill();
+    if((def.id==="streetlight"||def.id==="trafficLight") && night){
+      ctx.beginPath();
+      ctx.arc(sx, baseY-h, Math.max(4,7*z), 0, 7);
+      ctx.fillStyle="#ffe38a99";
+      ctx.fill();
+    }
+  } else if(def.shape==="tree"){
+    ctx.strokeStyle="#6b4a30"; ctx.lineWidth=Math.max(2,4*z);
+    ctx.beginPath();
+    ctx.moveTo(sx,sy); ctx.lineTo(sx,sy-h*0.4);
+    ctx.stroke();
+    const grad = ctx.createRadialGradient(sx-6*z,sy-h*0.75,2, sx,sy-h*0.7, Math.max(10,hw*0.9));
+    const c1 = night? shade(def.top,-50): shade(def.top,20);
+    const c2 = night? shade(def.top,-70): shade(def.top,-30);
+    grad.addColorStop(0,c1); grad.addColorStop(1,c2);
+    ctx.beginPath();
+    ctx.ellipse(sx, sy-h*0.72, Math.max(10,hw*0.85), Math.max(9,hh*1.5), 0,0,7);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  } else if(def.shape==="vehicle"){
+    const bw=hw*1.1, bh=hh*0.9;
+    diamond(sx,sy-h*0.3,bw*0.6,bh*0.6);
+    ctx.fillStyle="#00000022"; ctx.fill();
+    const N=[sx, sy-h-hh*0.4], E=[sx+hw*0.65, sy-h], S=[sx, sy-h+hh*0.4], W=[sx-hw*0.65, sy-h];
+    ctx.beginPath();
+    ctx.moveTo(N[0],N[1]);ctx.lineTo(E[0],E[1]);ctx.lineTo(S[0],S[1]);ctx.lineTo(W[0],W[1]);
+    ctx.closePath();
+    ctx.fillStyle= night ? shade(def.top,-40): def.top;
+    ctx.fill();
+    ctx.strokeStyle="#00000040"; ctx.lineWidth=1.5; ctx.stroke();
+    if(night){
+      ctx.fillStyle="#fff3b0";
+      ctx.beginPath(); ctx.arc(E[0],E[1], Math.max(1.5,2.5*z),0,7); ctx.fill();
+    }
+  }
+
+  // icon
+  if(def.icon && def.worldIcon !== false){
+    const fontSize = Math.max(9, (def.shape==="flat"||def.shape==="flatStripe"||def.shape==="flatLetter"||def.shape==="flatFlower" ? 14 : 12)*z);
+    ctx.font = fontSize+"px sans-serif";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    let iconY = sy - h - (def.shape==="tree"? h*0.55 : (def.shape==="block"? hh*0.1: (def.shape==="thin"? h*0.85: hh*0.0)));
+    if(def.shape==="vehicle") iconY = sy-h*0.8;
+    ctx.globalAlpha = 0.95;
+    ctx.fillText(def.icon, sx, iconY);
+    ctx.globalAlpha = 1;
+  }
+
+  if(selected){
+    const [ssx,ssy] = [sx, sy-h];
+    ctx.save();
+    ctx.strokeStyle="#4a90d9";
+    ctx.lineWidth=2.5;
+    ctx.setLineDash([5,4]);
+    diamond(sx,sy,hw*1.05,hh*1.05);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function skyColor(){
+  return isNight ? "#1a2340" : "#cfe3f0";
+}
+
+function draw(){
+  const w = canvas.width/dpr, h = canvas.height/dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  // sky
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  if(isNight){
+    grad.addColorStop(0,"#0d1330");
+    grad.addColorStop(1,"#2a3660");
+  } else {
+    grad.addColorStop(0,"#bfe0f5");
+    grad.addColorStop(1,"#e7f3e0");
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,w,h);
+
+  if(isNight){
+    ctx.fillStyle="#ffffffcc";
+    stars.forEach(s=>{
+      ctx.beginPath();
+      ctx.arc(s.x*w, s.y*h, s.r, 0, 7);
+      ctx.fill();
+    });
+  }
+
+  // build tile order by depth
+  const tiles = [];
+  for(let gx=-GRID_RANGE; gx<=GRID_RANGE; gx++){
+    for(let gy=-GRID_RANGE; gy<=GRID_RANGE; gy++){
+      const [rx,ry] = rotateGrid(gx,gy,rotation);
+      tiles.push({gx,gy,depth:rx+ry, tie:rx});
+    }
+  }
+  tiles.sort((a,b)=> a.depth-b.depth || a.tie-b.tie);
+
+  tiles.forEach(t=>{
+    drawGround(t.gx,t.gy);
+  });
+  tiles.forEach(t=>{
+    const obj = world.get(t.gx+","+t.gy);
+    if(obj){
+      const def = ITEM_BY_ID[obj.type];
+      if(def) drawItem(def, obj.gx, obj.gy, obj.id===selectedObjId);
+    }
+  });
+
+  if(hoverTile && Math.abs(hoverTile[0])<=GRID_RANGE && Math.abs(hoverTile[1])<=GRID_RANGE){
+    const occupied = world.has(hoverTile[0]+","+hoverTile[1]);
+    drawHover(hoverTile[0],hoverTile[1],occupied);
+  }
+
+  if(isNight){
+    ctx.fillStyle="#0a103022";
+    ctx.fillRect(0,0,w,h);
+  }
+
+  drawMinimap();
+}
+
+let needsRender = true;
+function requestRender(){ needsRender = true; }
+function loop(){
+  if(needsRender){ draw(); needsRender=false; }
+  requestAnimationFrame(loop);
+}
+
+/* =====================================================================
+   ミニマップ
+===================================================================== */
+const mmCanvas = document.getElementById("minimap");
+const mmCtx = mmCanvas.getContext("2d");
+function drawMinimap(){
+  const w=mmCanvas.width, h=mmCanvas.height;
+  mmCtx.fillStyle = isNight ? "#1a2340" : "#bfe0a0";
+  mmCtx.fillRect(0,0,w,h);
+  const scale = Math.min(w,h)/((GRID_RANGE*2+2));
+  const ox = w/2, oy = h/2;
+  world.forEach(obj=>{
+    const def = ITEM_BY_ID[obj.type];
+    if(!def) return;
+    const x = ox + obj.gx*scale;
+    const y = oy + obj.gy*scale*0.7;
+    mmCtx.fillStyle = CAT_COLOR[def.cat] || "#999";
+    mmCtx.fillRect(x-1.4, y-1.4, 2.8, 2.8);
+  });
+  // viewport rect (approx, based on canvas size & zoom)
+  const cw = canvas.width/dpr, ch = canvas.height/dpr;
+  const hw=(TILE_W/2)*camera.zoom, hh=(TILE_H/2)*camera.zoom;
+  const spanGX = (cw/2)/hw + (ch/2)/hh;
+  const spanGY = (ch/2)/hh + (cw/2)/hw;
+  const rectW = Math.min(w, spanGX*scale);
+  const rectH = Math.min(h, spanGY*scale*0.7);
+  mmCtx.strokeStyle="#4a90d9";
+  mmCtx.lineWidth=1.5;
+  mmCtx.strokeRect(ox-rectW/2 - (camera.x/hw)*scale*0.5, oy-rectH/2 - (camera.y/hh)*scale*0.35, rectW, rectH);
+}
+
+document.getElementById("mmZoomIn").addEventListener("click", ()=>setZoom(camera.zoom+0.15));
+document.getElementById("mmZoomOut").addEventListener("click", ()=>setZoom(camera.zoom-0.15));
+mmCanvas.addEventListener("click", e=>{
+  const rect = mmCanvas.getBoundingClientRect();
+  const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+  const scale = Math.min(mmCanvas.width,mmCanvas.height)/((GRID_RANGE*2+2));
+  const gx = (mx - mmCanvas.width/2)/scale;
+  const gy = (my - mmCanvas.height/2)/(scale*0.7);
+  const hw=(TILE_W/2)*camera.zoom, hh=(TILE_H/2)*camera.zoom;
+  // recenter the camera so the clicked grid point ends up in the middle of the view
+  const [rx,ry] = rotateGrid(Math.round(gx),Math.round(gy),rotation);
+  camera.x = -(rx-ry)*hw;
+  camera.y = -(rx+ry)*hh;
+  requestRender();
+});
+
+/* =====================================================================
+   UI 構築（カテゴリタブ・アイテム一覧）
+===================================================================== */
+let activeCat = "all";
+const tabsEl = document.getElementById("tabs");
+const gridEl = document.getElementById("itemgrid");
+
+CATS.forEach(c=>{
+  const b = document.createElement("button");
+  b.className = "tab" + (c.id==="all" ? " active" : "");
+  b.textContent = c.label;
+  b.dataset.cat = c.id;
+  b.addEventListener("click", ()=>{
+    activeCat = c.id;
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t===b));
+    renderItemGrid();
+  });
+  tabsEl.appendChild(b);
+});
+
+function renderItemGrid(){
+  gridEl.innerHTML = "";
+
+  const eraser = document.createElement("div");
+  eraser.className = "itemcard eraser-card" + (selectedTool==="__eraser__" ? " selected":"");
+  eraser.innerHTML = `<span class="ic">🧹</span><span>けす</span>`;
+  eraser.addEventListener("click", ()=>selectTool("__eraser__"));
+  if(activeCat==="all") gridEl.appendChild(eraser);
+
+  ITEMS.filter(it => activeCat==="all" || it.cat===activeCat).forEach(it=>{
+    const card = document.createElement("div");
+    card.className = "itemcard" + (selectedTool===it.id ? " selected":"");
+    card.dataset.id = it.id;
+    card.innerHTML = `<span class="ic">${it.icon}</span><span>${it.label}</span><span class="catdot" style="background:${CAT_COLOR[it.cat]}"></span>`;
+    card.addEventListener("click", ()=>selectTool(it.id));
+    gridEl.appendChild(card);
+  });
+}
+
+function selectTool(id){
+  selectedTool = (selectedTool===id) ? null : id;
+  selectedObjId = null;
+  hideSelBar();
+  document.querySelectorAll(".itemcard").forEach(c=>{
+    const cid = c.classList.contains("eraser-card") ? "__eraser__" : c.dataset.id;
+    c.classList.toggle("selected", cid===selectedTool);
+  });
+  document.getElementById("world").classList.toggle("placing", !!selectedTool);
+  const hintText = document.getElementById("hintText");
+  if(selectedTool==="__eraser__"){
+    hintText.textContent = "置いてあるアイテムをクリックすると消せるよ";
+  } else if(selectedTool){
+    hintText.textContent = ITEM_BY_ID[selectedTool].label + " を置く場所をクリックしてね";
+  } else {
+    hintText.textContent = "アイテムを選んで、好きな場所に置いてみよう！";
+  }
+  requestRender();
+}
+renderItemGrid();
+
+/* =====================================================================
+   Undo / Redo
+===================================================================== */
+function snapshot(){
+  return Array.from(world.values()).map(o=>({id:o.id,type:o.type,gx:o.gx,gy:o.gy}));
+}
+function restore(arr){
+  world = new Map();
+  let maxId = 0;
+  arr.forEach(o=>{
+    world.set(o.gx+","+o.gy, o);
+    maxId = Math.max(maxId, o.id);
+  });
+  nextId = maxId+1;
+  requestRender();
+  autosave();
+}
+function pushHistory(){
+  history.push(snapshot());
+  if(history.length>60) history.shift();
+  future = [];
+}
+function undo(){
+  if(history.length===0) return;
+  future.push(snapshot());
+  const prev = history.pop();
+  restore(prev);
+}
+function redo(){
+  if(future.length===0) return;
+  history.push(snapshot());
+  const next = future.pop();
+  restore(next);
+}
+
+/* =====================================================================
+   配置・削除
+===================================================================== */
+function placeAt(gx,gy){
+  if(Math.abs(gx)>GRID_RANGE || Math.abs(gy)>GRID_RANGE) return;
+  const key = gx+","+gy;
+  if(selectedTool==="__eraser__"){
+    if(world.has(key)){
+      pushHistory();
+      world.delete(key);
+      requestRender();
+      autosave();
+    }
+    return;
+  }
+  if(!selectedTool) return;
+  pushHistory();
+  world.set(key, {id:nextId++, type:selectedTool, gx, gy});
+  requestRender();
+  autosave();
+}
+
+function tryPickOrPlace(gx,gy){
+  const key = gx+","+gy;
+  const existing = world.get(key);
+  if(selectedTool){
+    placeAt(gx,gy);
+    return;
+  }
+  if(existing){
+    selectedObjId = existing.id;
+    showSelBar(ITEM_BY_ID[existing.type].label);
+    requestRender();
+  } else {
+    selectedObjId = null;
+    hideSelBar();
+    requestRender();
+  }
+}
+
+const selbarEl = document.getElementById("selbar");
+function showSelBar(label){
+  document.getElementById("selLabel").textContent = label + " を選択中";
+  selbarEl.classList.add("show");
+}
+function hideSelBar(){ selbarEl.classList.remove("show"); }
+document.getElementById("selDelete").addEventListener("click", ()=>{
+  if(selectedObjId==null) return;
+  pushHistory();
+  for(const [k,v] of world){ if(v.id===selectedObjId){ world.delete(k); break; } }
+  selectedObjId = null;
+  hideSelBar();
+  requestRender();
+  autosave();
+});
+
+/* =====================================================================
+   ポインタ操作（配置 / カメラドラッグ / ズーム）
+===================================================================== */
+let pointerDown=false, dragStartX=0, dragStartY=0, camStartX=0, camStartY=0, movedEnough=false;
+
+canvas.addEventListener("pointerdown", e=>{
+  pointerDown = true;
+  movedEnough = false;
+  dragStartX = e.clientX; dragStartY = e.clientY;
+  camStartX = camera.x; camStartY = camera.y;
+  canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointermove", e=>{
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+  const [gx,gy] = screenToGrid(mx,my);
+  if(!hoverTile || hoverTile[0]!==gx || hoverTile[1]!==gy){
+    hoverTile = [gx,gy];
+    requestRender();
+  }
+
+  if(!pointerDown) return;
+  const dx = e.clientX-dragStartX, dy = e.clientY-dragStartY;
+  if(Math.abs(dx)>4 || Math.abs(dy)>4) movedEnough = true;
+  if(movedEnough){
+    camera.x = camStartX + dx;
+    camera.y = camStartY + dy;
+    canvas.classList.add("dragging");
+    requestRender();
+  }
+});
+
+canvas.addEventListener("pointerup", e=>{
+  if(pointerDown && !movedEnough){
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+    const [gx,gy] = screenToGrid(mx,my);
+    tryPickOrPlace(gx,gy);
+  }
+  pointerDown=false;
+  canvas.classList.remove("dragging");
+});
+canvas.addEventListener("pointerleave", ()=>{ hoverTile=null; requestRender(); });
+
+canvas.addEventListener("wheel", e=>{
+  e.preventDefault();
+  setZoom(camera.zoom - e.deltaY*0.001);
+},{passive:false});
+
+function setZoom(z){
+  camera.zoom = Math.max(0.4, Math.min(2.6, z));
+  requestRender();
+}
+
+/* pan buttons */
+function panBy(dx,dy){ camera.x+=dx; camera.y+=dy; requestRender(); }
+document.getElementById("panUp").addEventListener("click", ()=>panBy(0,60));
+document.getElementById("panDown").addEventListener("click", ()=>panBy(0,-60));
+document.getElementById("panLeft").addEventListener("click", ()=>panBy(60,0));
+document.getElementById("panRight").addEventListener("click", ()=>panBy(-60,0));
+document.getElementById("btnZoomIn").addEventListener("click", ()=>setZoom(camera.zoom+0.15));
+document.getElementById("btnZoomOut").addEventListener("click", ()=>setZoom(camera.zoom-0.15));
+document.getElementById("btnRotate").addEventListener("click", ()=>{
+  rotation = (rotation+1)%4;
+  requestRender();
+});
+
+/* keyboard delete */
+window.addEventListener("keydown", e=>{
+  if((e.key==="Delete"||e.key==="Backspace") && selectedObjId!=null){
+    e.preventDefault();
+    document.getElementById("selDelete").click();
+  }
+});
+
+/* =====================================================================
+   カメラモード / 昼夜
+===================================================================== */
+document.getElementById("camTop").addEventListener("click", ()=>{
+  cameraMode="top";
+  document.getElementById("camTop").classList.add("active");
+  document.getElementById("camWalk").classList.remove("active");
+  setZoom(1);
+});
+document.getElementById("camWalk").addEventListener("click", ()=>{
+  cameraMode="walk";
+  document.getElementById("camWalk").classList.add("active");
+  document.getElementById("camTop").classList.remove("active");
+  setZoom(2.2);
+});
+
+function setNight(v){
+  isNight=v;
+  document.getElementById("btnDay").classList.toggle("active",!v);
+  document.getElementById("btnNight").classList.toggle("active",v);
+  requestRender();
+}
+document.getElementById("btnDay").addEventListener("click", ()=>setNight(false));
+document.getElementById("btnNight").addEventListener("click", ()=>setNight(true));
+
+/* =====================================================================
+   保存・読み込み・新規・全消し・元に戻す
+===================================================================== */
+const STORAGE_KEY = "sakiCity_v2";
+
+function autosave(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot()));
+  }catch(err){ /* ignore quota errors */ }
+}
+
+function loadFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const arr = JSON.parse(raw);
+    restore(arr);
+    history=[]; future=[];
+  }catch(err){ /* ignore corrupt data */ }
+}
+
+document.getElementById("btnSave").addEventListener("click", ()=>{
+  const data = JSON.stringify(snapshot(), null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "saki-city.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  autosave();
+});
+
+document.getElementById("btnOpen").addEventListener("click", ()=>{
+  document.getElementById("fileInput").click();
+});
+document.getElementById("fileInput").addEventListener("change", e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const arr = JSON.parse(ev.target.result);
+      pushHistory();
+      restore(arr);
+    }catch(err){
+      alert("ファイルを読み込めなかったよ…もう一度確認してね。");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+document.getElementById("btnNew").addEventListener("click", ()=>{
+  if(world.size>0 && !confirm("あたらしい街をつくる？今の街は消えるよ！")) return;
+  pushHistory();
+  world = new Map();
+  nextId = 1;
+  rotation = 0;
+  camera = {x:0,y:0,zoom:1};
+  selectedObjId=null; hideSelBar();
+  requestRender();
+  autosave();
+});
+
+document.getElementById("btnClear").addEventListener("click", ()=>{
+  if(world.size===0) return;
+  if(!confirm("街を全部消す？")) return;
+  pushHistory();
+  world = new Map();
+  selectedObjId=null; hideSelBar();
+  requestRender();
+  autosave();
+});
+
+document.getElementById("btnUndo").addEventListener("click", undo);
+document.getElementById("btnRedo").addEventListener("click", redo);
+
+/* =====================================================================
+   スクリーンショット
+===================================================================== */
+document.getElementById("shotbtn").addEventListener("click", ()=>{
+  canvas.toBlob(blob=>{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "saki-city.png";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+});
+
+/* =====================================================================
+   ヘルプモーダル
+===================================================================== */
+document.getElementById("btnHelp").addEventListener("click", ()=>{
+  document.getElementById("modalbg").classList.add("show");
+});
+function closeHelp(){
+  document.getElementById("modalbg").classList.remove("show");
+}
+document.getElementById("modalbg").addEventListener("click", e=>{
+  if(e.target.id==="modalbg") closeHelp();
+});
+
+/* =====================================================================
+   起動
+===================================================================== */
+resizeCanvas();
+loadFromStorage();
+requestRender();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
