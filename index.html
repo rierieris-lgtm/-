@@ -507,20 +507,23 @@ function drawItem(def,gx,gy,selected){
       ctx.restore();
     }
     if(def.shape==="flatLetter"){
-      const inW=hw*0.6, inH=hh*0.6;
+      const inW=hw*0.62, inH=hh*0.62;
       const iN=[sx, sy-inH], iE=[sx+inW, sy], iS=[sx, sy+inH], iW=[sx-inW, sy];
       ctx.strokeStyle="#ffffffcc"; ctx.lineWidth=Math.max(1,2*z);
-      ctx.lineJoin="round";
-      // parking bay lines: closed on the back/sides, open toward the viewer (entrance)
+      ctx.lineCap="round";
+      // two straight parallel parking-space lines (car pulls in straight between them)
       ctx.beginPath();
-      ctx.moveTo(iW[0],iW[1]); ctx.lineTo(iN[0],iN[1]); ctx.lineTo(iE[0],iE[1]);
+      ctx.moveTo(iW[0],iW[1]); ctx.lineTo(iN[0],iN[1]);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(iE[0],iE[1]); ctx.lineTo(iS[0],iS[1]);
       ctx.stroke();
       if(def.icon){
         const fs = Math.max(9,12*z);
         ctx.font = "bold "+fs+"px sans-serif";
         ctx.fillStyle="#ffffffdd";
         ctx.textAlign="center"; ctx.textBaseline="middle";
-        ctx.fillText(def.icon, sx, sy - inH*0.15);
+        ctx.fillText(def.icon, sx, sy);
       }
     }
     if(def.shape==="flatFlower"){
