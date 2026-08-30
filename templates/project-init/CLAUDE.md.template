@@ -1,0 +1,16 @@
+# {{PROJECT_NAME}}
+
+## このプロジェクトについて
+- クライアント / 用途: {{CLIENT_OR_PURPOSE}}
+- 開始日: {{TODAY}}
+
+## セッション運用ルール
+詳細は `.claude/rules/memory-policy.md` を参照。要約:
+1. 作業開始前に `.claude/memory/` の最新ファイルを読む
+2. 作業終了時・セッション切り替え前に `.claude/memory/YYYYMMDD.md` に要約を書く
+3. 他プロジェクトの記憶を持ち込まない・このプロジェクトの記憶を他に持ち出さない
+
+## 拡張ポイント
+- `.claude/skills/` : このプロジェクト専用スキル
+- `.claude/agents/` : このプロジェクト専用サブエージェント定義
+- `.claude/rules/`  : 運用ルール一式

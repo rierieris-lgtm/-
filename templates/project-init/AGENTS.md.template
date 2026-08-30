@@ -1,0 +1,18 @@
+# {{PROJECT_NAME}}
+
+## このプロジェクトについて
+- クライアント / 用途: {{CLIENT_OR_PURPOSE}}
+- 開始日: {{TODAY}}
+
+## セッション運用ルール
+詳細は `.claude/rules/memory-policy.md` を参照。要約:
+1. 作業開始前に `.claude/memory/` の最新ファイルを読む
+2. 作業終了時・セッション切り替え前に `.claude/memory/YYYYMMDD.md` に要約を書く
+3. 他プロジェクトの記憶を持ち込まない・このプロジェクトの記憶を他に持ち出さない
+
+## Codex 拡張ポイント
+- `.codex/skills/` : このプロジェクト専用スキル
+- `.codex/agents/` : このプロジェクト専用エージェント定義
+
+※ メモリの読み書き先は Claude Code と共通で `.claude/memory/` を使用する
+  （ツールを問わずメモリを一本化するため）。
